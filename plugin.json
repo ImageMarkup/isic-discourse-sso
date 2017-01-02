@@ -1,0 +1,5 @@
+{
+    "name": "Discourse SSO",
+    "description": "Use Girder as a Discourse Single-Sign-On provider.",
+    "version": "0.1.0"
+}

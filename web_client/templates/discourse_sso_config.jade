@@ -1,0 +1,13 @@
+.g-config-breadcrumb-container
+p.
+  Configure Discourse Single-Sign-On (SSO).
+form#g-discourse-sso-settings-form(role="form")
+  .form-group
+    label.control-label(for="g-discourse-sso-sso-secret") Discourse SSO secret
+    input.input-sm.form-control#g-discourse-sso-sso-secret(type="password",
+      placeholder="Enter the secret string as configured on Discourse")
+    label.control-label.checkbox-inline
+      input#g-discourse-sso-require-activation(type="checkbox")
+      | Require Discourse to confirm email address
+  p#g-discourse-sso-error-message.g-validation-failed-message
+  input.btn.btn-sm.btn-primary(type="submit", value="Save")
