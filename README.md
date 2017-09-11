@@ -10,7 +10,7 @@ See https://meta.discourse.org/t/official-single-sign-on-for-discourse/13045.
 
 Requirements
 ------------
-* **Girder 1.x**
+* **Girder 2.x**
 
 Configuration
 -------------
