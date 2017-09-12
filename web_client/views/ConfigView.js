@@ -1,7 +1,12 @@
-/**
-* Administrative configuration view.
-*/
-girder.views.discourse_sso_ConfigView = girder.View.extend({
+import PluginConfigBreadcrumbWidget from 'girder/views/widgets/PluginConfigBreadcrumbWidget';
+import View from 'girder/views/View';
+import events from 'girder/events';
+import { restRequest } from 'girder/rest';
+
+import ConfigViewTemplate from '../templates/configView.pug';
+import '../stylesheets/configView.styl'
+
+const ConfigView = View.extend({
     events: {
         'submit #g-discourse-sso-settings-form': function (event) {
             event.preventDefault();
@@ -19,7 +24,7 @@ girder.views.discourse_sso_ConfigView = girder.View.extend({
     },
 
     initialize: function () {
-        girder.restRequest({
+        restRequest({
             type: 'GET',
             path: 'system/setting',
             data: {
@@ -28,21 +33,22 @@ girder.views.discourse_sso_ConfigView = girder.View.extend({
                     'discourse_sso.require_activation'
                 ])
             }
-        }).done(_.bind(function (resp) {
-            this.render();
-            this.$('#g-discourse-sso-sso-secret').val(
-                resp['discourse_sso.sso_secret']);
-            this.$('#g-discourse-sso-require-activation').prop(
-                'checked',
-                resp['discourse_sso.require_activation']);
-        }, this));
+        })
+            .done((resp) => {
+                this.render();
+                this.$('#g-discourse-sso-sso-secret').val(
+                    resp['discourse_sso.sso_secret']);
+                this.$('#g-discourse-sso-require-activation').prop(
+                    'checked',
+                    resp['discourse_sso.require_activation']);
+            });
     },
 
     render: function () {
-        this.$el.html(girder.templates.discourse_sso_config());
+        this.$el.html(ConfigViewTemplate());
 
         if (!this.breadcrumb) {
-            this.breadcrumb = new girder.views.PluginConfigBreadcrumbWidget({
+            this.breadcrumb = new PluginConfigBreadcrumbWidget({
                 pluginName: 'Discourse SSO',
                 el: this.$('.g-config-breadcrumb-container'),
                 parentView: this
@@ -55,28 +61,28 @@ girder.views.discourse_sso_ConfigView = girder.View.extend({
     },
 
     _saveSettings: function (settings) {
-        girder.restRequest({
+        restRequest({
             type: 'PUT',
             path: 'system/setting',
             data: {
                 list: JSON.stringify(settings)
             },
             error: null
-        }).done(_.bind(function () {
-            girder.events.trigger('g:alert', {
-                icon: 'ok',
-                text: 'Settings saved.',
-                type: 'success',
-                timeout: 4000
+        })
+            .done(() => {
+                events.trigger('g:alert', {
+                    icon: 'ok',
+                    text: 'Settings saved.',
+                    type: 'success',
+                    timeout: 4000
+                });
+            })
+            .error((resp) => {
+                this.$('#g-discourse-sso-error-message').text(
+                    resp.responseJSON.message
+                );
             });
-        }, this)).error(_.bind(function (resp) {
-            this.$('#g-discourse-sso-error-message').text(
-                resp.responseJSON.message
-            );
-        }, this));
     }
 });
 
-girder.router.route('plugins/discourse_sso/config', 'discourseSsoConfig', function () {
-    girder.events.trigger('g:navigateTo', girder.views.discourse_sso_ConfigView);
-});
+export default ConfigView;
