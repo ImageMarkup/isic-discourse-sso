@@ -168,7 +168,7 @@ class DiscourseSsoTestCase(base.TestCase):
         self.assertHasKeys(
             parsed,
             ('nonce', 'email', 'external_id', 'username', 'name',
-             'require_activation'))
+             'require_activation', 'admin', 'add_groups'))
         self.assertEqual(parsed['nonce'][0], 'cde5d95f27062eb09c98736c3f2aecce')
         self.assertEqual(parsed['email'][0], 'user1@email.com')
         self.assertEqual(parsed['external_id'][0], str(normalUser['_id']))
@@ -209,7 +209,7 @@ class DiscourseSsoTestCase(base.TestCase):
         self.assertHasKeys(
             parsed,
             ('nonce', 'email', 'external_id', 'username', 'name',
-             'require_activation'))
+             'require_activation', 'admin'))
         self.assertEqual(parsed['nonce'][0], 'cde5d95f27062eb09c98736c3f2aecce')
         self.assertEqual(parsed['email'][0], 'user2@email.com')
         self.assertEqual(parsed['external_id'][0], str(adminUser['_id']))
