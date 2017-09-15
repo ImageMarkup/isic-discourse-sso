@@ -4,7 +4,7 @@ import events from 'girder/events';
 import { restRequest } from 'girder/rest';
 
 import ConfigViewTemplate from '../templates/configView.pug';
-import '../stylesheets/configView.styl'
+import '../stylesheets/configView.styl';
 
 const ConfigView = View.extend({
     events: {
@@ -16,9 +16,6 @@ const ConfigView = View.extend({
             this._saveSettings([{
                 key: 'discourse_sso.sso_secret',
                 value: this.$('#g-discourse-sso-sso-secret').val().trim()
-            }, {
-                key: 'discourse_sso.require_activation',
-                value: this.$('#g-discourse-sso-require-activation').prop('checked')
             }]);
         }
     },
@@ -29,8 +26,7 @@ const ConfigView = View.extend({
             path: 'system/setting',
             data: {
                 list: JSON.stringify([
-                    'discourse_sso.sso_secret',
-                    'discourse_sso.require_activation'
+                    'discourse_sso.sso_secret'
                 ])
             }
         })
@@ -38,9 +34,6 @@ const ConfigView = View.extend({
                 this.render();
                 this.$('#g-discourse-sso-sso-secret').val(
                     resp['discourse_sso.sso_secret']);
-                this.$('#g-discourse-sso-require-activation').prop(
-                    'checked',
-                    resp['discourse_sso.require_activation']);
             });
     },
 

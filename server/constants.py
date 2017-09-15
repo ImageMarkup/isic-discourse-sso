@@ -20,4 +20,3 @@
 
 class PluginSettings:
     DISCOURSE_SSO_SECRET = 'discourse_sso.sso_secret'
-    DISCOURSE_SSO_REQUIRE_ACTIVATION = 'discourse_sso.require_activation'

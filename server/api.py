@@ -50,6 +50,7 @@ class DiscourseSso(Resource):
     @access.cookie
     @access.public
     def login(self, params):
+        Group = self.model('group')
         Setting = self.model('setting')
 
         self.requireParams(('sso', 'sig'), params)
@@ -65,7 +66,6 @@ class DiscourseSso(Resource):
         sig = params['sig']
 
         secret = Setting.get(PluginSettings.DISCOURSE_SSO_SECRET)
-        requireActivation = Setting.get(PluginSettings.DISCOURSE_SSO_REQUIRE_ACTIVATION)
 
         secret = secret.encode('utf-8')
         sso = sso.encode('utf-8')
@@ -86,10 +86,20 @@ class DiscourseSso(Resource):
         payload = {
             'nonce': nonce,
             'email': user['email'],
-            'external_id': user['_id'],
+            'external_id': str(user['_id']),
             'username': user['login'],
             'name': '%s %s' % (user['firstName'], user['lastName']),
-            'require_activation': 'true' if requireActivation else 'false'
+            'require_activation': 'false' if user['emailVerified'] else 'true',
+            'admin': 'true' if user['admin'] else 'false',
+            # Note, this list matches Discourse groups' "name" (which may only include numbers,
+            # letters and underscores), not "Full Name" (which is human readable), so it may be of
+            # limited utility
+            'add_groups': ','.join(
+                group['name']
+                for group in Group.find({
+                    '_id': {'$in': user.get('groups', [])}
+                })
+            )
         }
         payload = urllib.parse.urlencode(payload)
         payload = payload.encode('utf-8')
