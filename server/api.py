@@ -91,6 +91,9 @@ class DiscourseSso(Resource):
             'name': '%s %s' % (user['firstName'], user['lastName']),
             'require_activation': 'false' if user['emailVerified'] else 'true',
             'admin': 'true' if user['admin'] else 'false',
+            # Note, this list matches Discourse groups' "name" (which may only include numbers,
+            # letters and underscores), not "Full Name" (which is human readable), so it may be of
+            # limited utility
             'add_groups': ','.join(
                 group['name']
                 for group in Group.find({
