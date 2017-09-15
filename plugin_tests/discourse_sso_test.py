@@ -39,42 +39,55 @@ def tearDownModule():
 
 
 class DiscourseSsoTestCase(base.TestCase):
-
-    def setUp(self):
-        base.TestCase.setUp(self)
-
-        # Create a user
-        user = {
-            'email': 'user1@email.com',
-            'login': 'user1login',
-            'firstName': 'First',
-            'lastName': 'Last',
-            'password': 'user1password',
-            'admin': False
-        }
-        self.user = self.model('user').createUser(**user)
-
     def assertSignature(self, secret, payload, expectedSignature):
         """Assert that HMAC-SHA256 digest matches expected signature."""
         computedSignature = hmac.new(key=secret, msg=payload, digestmod=hashlib.sha256).hexdigest()
         self.assertEqual(expectedSignature, computedSignature)
 
     def testDiscourseLogin(self):
+        Group = self.model('group')
         Setting = self.model('setting')
+        User = self.model('user')
+
+        # Create users and groups
+        # This admin user will automatically have 'emailVerified' == True
+        adminUser = User.createUser(
+            email='user2@email.com',
+            login='user2login',
+            firstName='Admin',
+            lastName='Last',
+            password='user2password',
+            admin=True
+        )
+        normalUser = User.createUser(
+            email='user1@email.com',
+            login='user1login',
+            firstName='First',
+            lastName='Last',
+            password='user1password',
+            admin=False
+        )
+        group1 = Group.createGroup(
+            name='Group 1',
+            creator=normalUser
+        )
+        Group.addUser(group1, normalUser)
+        group2 = Group.createGroup(
+            name='Group&2',
+            creator=normalUser
+        )
+        Group.addUser(group2, normalUser)
 
         # Test required parameters
         self.ensureRequiredParams(
             path='/discourse_sso',
             required=('sso', 'sig'),
-            user=self.user)
+            user=normalUser)
 
         # Configure plugin settings
         Setting.set(
             PluginSettings.DISCOURSE_SSO_SECRET,
             '0123456789')
-        Setting.set(
-            PluginSettings.DISCOURSE_SSO_REQUIRE_ACTIVATION,
-            True)
 
         # Test when not logged in
         resp = self.request(
@@ -92,7 +105,7 @@ class DiscourseSsoTestCase(base.TestCase):
         # Test digest mismatch
         resp = self.request(
             path='/discourse_sso',
-            user=self.user,
+            user=normalUser,
             params={
                 'sso': 'bm9uY2U9Y2RlNWQ5NWYyNzA2MmViMDljOTg3MzZjM2YyYWVjY2Umc'
                        'mV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmRpc2NvdXJzZS5sb2'
@@ -105,7 +118,7 @@ class DiscourseSsoTestCase(base.TestCase):
         # Test bad request (missing return_sso_url)
         resp = self.request(
             path='/discourse_sso',
-            user=self.user,
+            user=normalUser,
             params={
                 'sso': 'bm9uY2U9MTExMTE=',
                 'sig': '5180d3dd81e8e2e5f48013a8b34153548b952c9e7ac35ac9e9a6edf1694c0683'
@@ -116,7 +129,7 @@ class DiscourseSsoTestCase(base.TestCase):
         # Test bad request (missing nonce)
         resp = self.request(
             path='/discourse_sso',
-            user=self.user,
+            user=normalUser,
             params={
                 'sso': 'cmV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmxvY2FsaG9zdCUyRnJldHVybl9zc29fdXJs',
                 'sig': '0df632d04824162d7622af6c2e67ee7e816eb2b7b73cdc208c3892e6954f4df8'
@@ -127,7 +140,7 @@ class DiscourseSsoTestCase(base.TestCase):
         # Test proper request
         resp = self.request(
             path='/discourse_sso',
-            user=self.user,
+            user=normalUser,
             params={
                 'sso': 'bm9uY2U9Y2RlNWQ5NWYyNzA2MmViMDljOTg3MzZjM2YyYWVjY2Umc'
                        'mV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmRpc2NvdXJzZS5sb2'
@@ -158,18 +171,17 @@ class DiscourseSsoTestCase(base.TestCase):
              'require_activation'))
         self.assertEqual(parsed['nonce'][0], 'cde5d95f27062eb09c98736c3f2aecce')
         self.assertEqual(parsed['email'][0], 'user1@email.com')
-        self.assertEqual(parsed['external_id'][0], str(self.user['_id']))
+        self.assertEqual(parsed['external_id'][0], str(normalUser['_id']))
         self.assertEqual(parsed['username'][0], 'user1login')
         self.assertEqual(parsed['name'][0], 'First Last')
         self.assertEqual(parsed['require_activation'][0], 'true')
+        self.assertEqual(parsed['admin'][0], 'false')
+        self.assertEqual(parsed['add_groups'][0], 'Group 1,Group&2')
 
-        # Test proper request with required activation disabled
-        Setting.set(
-            PluginSettings.DISCOURSE_SSO_REQUIRE_ACTIVATION,
-            False)
+        # Test proper request for admin user
         resp = self.request(
             path='/discourse_sso',
-            user=self.user,
+            user=adminUser,
             params={
                 'sso': 'bm9uY2U9Y2RlNWQ5NWYyNzA2MmViMDljOTg3MzZjM2YyYWVjY2Umc'
                        'mV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmRpc2NvdXJzZS5sb2'
@@ -199,11 +211,13 @@ class DiscourseSsoTestCase(base.TestCase):
             ('nonce', 'email', 'external_id', 'username', 'name',
              'require_activation'))
         self.assertEqual(parsed['nonce'][0], 'cde5d95f27062eb09c98736c3f2aecce')
-        self.assertEqual(parsed['email'][0], 'user1@email.com')
-        self.assertEqual(parsed['external_id'][0], str(self.user['_id']))
-        self.assertEqual(parsed['username'][0], 'user1login')
-        self.assertEqual(parsed['name'][0], 'First Last')
+        self.assertEqual(parsed['email'][0], 'user2@email.com')
+        self.assertEqual(parsed['external_id'][0], str(adminUser['_id']))
+        self.assertEqual(parsed['username'][0], 'user2login')
+        self.assertEqual(parsed['name'][0], 'Admin Last')
         self.assertEqual(parsed['require_activation'][0], 'false')
+        self.assertEqual(parsed['admin'][0], 'true')
+        self.assertNotIn('add_groups', parsed)
 
     def testSsoSecretSettingValidation(self):
         """Test validation of SSO secret setting."""
@@ -236,29 +250,3 @@ class DiscourseSsoTestCase(base.TestCase):
         self.assertRaises(
             ValidationException,
             Setting.set, PluginSettings.DISCOURSE_SSO_SECRET, '000000000')
-
-    def testRequireActivationSettingValidation(self):
-        """Test validation of require activation setting."""
-        Setting = self.model('setting')
-
-        # Test valid require activation settings
-        Setting.set(
-            PluginSettings.DISCOURSE_SSO_REQUIRE_ACTIVATION,
-            False)
-        Setting.set(
-            PluginSettings.DISCOURSE_SSO_REQUIRE_ACTIVATION,
-            True)
-
-        # Test invalid require activation settings
-        self.assertRaises(
-            ValidationException,
-            Setting.set, PluginSettings.DISCOURSE_SSO_REQUIRE_ACTIVATION,
-            None)
-        self.assertRaises(
-            ValidationException,
-            Setting.set, PluginSettings.DISCOURSE_SSO_REQUIRE_ACTIVATION,
-            1)
-        self.assertRaises(
-            ValidationException,
-            Setting.set, PluginSettings.DISCOURSE_SSO_REQUIRE_ACTIVATION,
-            'True')

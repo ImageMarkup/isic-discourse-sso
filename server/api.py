@@ -66,7 +66,6 @@ class DiscourseSso(Resource):
         sig = params['sig']
 
         secret = Setting.get(PluginSettings.DISCOURSE_SSO_SECRET)
-        requireActivation = Setting.get(PluginSettings.DISCOURSE_SSO_REQUIRE_ACTIVATION)
 
         secret = secret.encode('utf-8')
         sso = sso.encode('utf-8')
@@ -90,7 +89,7 @@ class DiscourseSso(Resource):
             'external_id': str(user['_id']),
             'username': user['login'],
             'name': '%s %s' % (user['firstName'], user['lastName']),
-            'require_activation': 'true' if requireActivation else 'false',
+            'require_activation': 'false' if user['emailVerified'] else 'true',
             'admin': 'true' if user['admin'] else 'false',
             'add_groups': ','.join(
                 group['name']

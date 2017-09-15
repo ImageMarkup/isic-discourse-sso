@@ -38,19 +38,5 @@ def validateSsoSecret(doc):
             'Discourse SSO secret must be at least 10 characters.', 'value')
 
 
-@setting_utilities.validator(PluginSettings.DISCOURSE_SSO_REQUIRE_ACTIVATION)
-def validateRequireActivation(doc):
-    """Validate require activation setting."""
-    if not isinstance(doc['value'], bool):
-        raise ValidationException(
-            'Require activation setting must be provided as a boolean.', 'value')
-
-
-@setting_utilities.default(PluginSettings.DISCOURSE_SSO_REQUIRE_ACTIVATION)
-def defaultRequireActivation():
-    """Provide default value for require activation setting."""
-    return True
-
-
 def load(info):
     info['apiRoot'].discourse_sso = api.DiscourseSso()
