@@ -50,6 +50,7 @@ class DiscourseSso(Resource):
     @access.cookie
     @access.public
     def login(self, params):
+        Group = self.model('group')
         Setting = self.model('setting')
 
         self.requireParams(('sso', 'sig'), params)
@@ -86,10 +87,17 @@ class DiscourseSso(Resource):
         payload = {
             'nonce': nonce,
             'email': user['email'],
-            'external_id': user['_id'],
+            'external_id': str(user['_id']),
             'username': user['login'],
             'name': '%s %s' % (user['firstName'], user['lastName']),
-            'require_activation': 'true' if requireActivation else 'false'
+            'require_activation': 'true' if requireActivation else 'false',
+            'admin': 'true' if user['admin'] else 'false',
+            'add_groups': ','.join(
+                group['name']
+                for group in Group.find({
+                    '_id': {'$in': user.get('groups', [])}
+                })
+            )
         }
         payload = urllib.parse.urlencode(payload)
         payload = payload.encode('utf-8')
