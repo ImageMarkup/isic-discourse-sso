@@ -5,6 +5,8 @@ import { login } from 'girder/auth';
 import { restRequest } from 'girder/rest';
 import 'girder/utilities/jquery/girderEnable';
 
+import OAuthLoginView from 'girder_plugins/oauth/views/OAuthLoginView';
+
 import LoginDialogTemplate from 'girder/templates/layout/loginDialog.pug';
 
 const StandaloneLoginView = View.extend({
@@ -63,6 +65,12 @@ const StandaloneLoginView = View.extend({
         this.$('close').remove();
         this.$('[data-dismiss="modal"]').remove();
         this.$('.modal-title').text('ISIC Archive: Log in');
+
+        this.oauthLoginView = new OAuthLoginView({
+            redirect: window.location.href,
+            el: this.$('.modal-body'),
+            parentView: this
+        }).render();
 
         return this;
     }
