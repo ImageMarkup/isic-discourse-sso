@@ -1,5 +1,12 @@
 {
     "name": "Discourse SSO",
     "description": "Use Girder as a Discourse Single-Sign-On provider.",
-    "version": "0.1.0"
+    "version": "0.1.0",
+    "webpack": {
+        "main": {
+            "plugin": "web_client/main.js",
+            "external": "web_external/main.js"
+        }
+    }
+
 }

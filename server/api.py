@@ -17,6 +17,7 @@
 #  limitations under the License.
 ###############################################################################
 
+import os
 import base64
 import cherrypy
 import hashlib
@@ -24,46 +25,59 @@ import hmac
 
 from six.moves import urllib
 
-from girder.api import access
-from girder.api.describe import Description, describeRoute
-from girder.api.rest import RestException, Resource
+from girder.api.rest import RestException, getCurrentUser, getCurrentToken
+from girder.utility.model_importer import ModelImporter
+from girder.utility.plugin_utilities import getPluginDir
+from girder.utility.webroot import WebrootBase
+
 from .constants import PluginSettings
 
 
-class DiscourseSso(Resource):
-    """
-    Discourse Single-Sign-On provider implementation. Allows using Girder
-    authentication in place of Discourse authentication to avoid users having to
-    create an additional account.
-    https://meta.discourse.org/t/official-single-sign-on-for-discourse/13045
-    """
-    def __init__(self):
-        super(DiscourseSso, self).__init__()
-        self.resourceName = 'discourse_sso'
-        self.route('GET', (), self.login)
+class DiscourseSsoWebroot(WebrootBase):
+    def __init__(self, templatePath=None):
+        if not templatePath:
+            templatePath = os.path.join(getPluginDir(), 'discourse_sso', 'server', 'webroot.mako')
+        super(DiscourseSsoWebroot, self).__init__(templatePath)
 
-    @describeRoute(
-        Description('Authenticate for Discourse SSO')
-        .param('sso', 'SSO payload from Discourse.')
-        .param('sig', 'HMAC-SHA256 hexadecimal digest of payload.')
-    )
-    @access.cookie
-    @access.public
-    def login(self, params):
-        Group = self.model('group')
-        Setting = self.model('setting')
+        self.vars = {
+            'apiRoot': '/api/v1',
+            'staticRoot': '/static',
+            'title': 'ISIC Archive Login'
+        }
 
-        self.requireParams(('sso', 'sig'), params)
+    def GET(self, **params):
+        # Call getCurrentToken once, to force cookies to always be used for auth
+        getCurrentToken(allowCookie=True)
+        user = getCurrentUser()
 
-        user = self.getCurrentUser()
         if not user:
-            # TODO: Improve by automatically continuing Discourse authentication
-            # after user logs in, or by providing login view as part of this
-            # plugin
+            return self._renderHTML()
+
+        try:
+            # self.requireParams(('sso', 'sig'), params)
+            sso = params.get('sso')
+            if not sso:
+                raise RestException('missing parameter: sso')
+            sig = params.get('sig')
+            if not sig:
+                raise RestException('missing parameter: sig')
+
+            self.redirect(user, sso, sig)
+        except RestException:
             raise cherrypy.HTTPRedirect('/')
 
-        sso = params['sso']
-        sig = params['sig']
+    def redirect(self, user, sso, sig):
+        """
+        Discourse Single-Sign-On provider implementation. Allows using Girder
+        authentication in place of Discourse authentication to avoid users having to
+        create an additional account.
+        https://meta.discourse.org/t/official-single-sign-on-for-discourse/13045
+
+        'sso', 'SSO payload from Discourse.'
+        'sig', 'HMAC-SHA256 hexadecimal digest of payload.'
+        """
+        Group = ModelImporter.model('group')
+        Setting = ModelImporter.model('setting')
 
         secret = Setting.get(PluginSettings.DISCOURSE_SSO_SECRET)
 
