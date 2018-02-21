@@ -25,7 +25,7 @@ import hmac
 
 from six.moves import urllib
 
-from girder.api.rest import RestException, getCurrentUser, getCurrentToken
+from girder.api.rest import RestException, getCurrentUser
 from girder.utility.model_importer import ModelImporter
 from girder.utility.plugin_utilities import getPluginDir
 from girder.utility.webroot import WebrootBase
@@ -46,10 +46,12 @@ class DiscourseSsoWebroot(WebrootBase):
         }
 
     def GET(self, **params):
-        # Call getCurrentToken once, to force cookies to always be used for auth
-        getCurrentToken(allowCookie=True)
-        user = getCurrentUser()
+        # Allow cookies for the rest of the request; normally, this would be done in "handleRoute"
+        # after setting a decorator, but this endpoint may return HTML, so it doesn't use the normal
+        # Girder API utilities
+        setattr(cherrypy.request, 'girderAllowCookie', True)
 
+        user = getCurrentUser()
         if not user:
             return self._renderHTML()
 

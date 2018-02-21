@@ -61,7 +61,11 @@ const StandaloneLoginView = View.extend({
     },
 
     render: function () {
-        this.$el.html(LoginDialogTemplate());
+        this.$el.html(LoginDialogTemplate({
+            enablePasswordLogin: true,
+            // TODO: fetch registrationPolicy from the server; for now, null will default to "open"
+            registrationPolicy: null
+        }));
         this.$('close').remove();
         this.$('[data-dismiss="modal"]').remove();
         this.$('.modal-title').text('ISIC Archive: Log in');
