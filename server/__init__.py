@@ -21,6 +21,8 @@ import six
 
 from girder.models.model_base import ValidationException
 from girder.utility import setting_utilities
+from girder.utility.plugin_utilities import registerPluginWebroot
+
 from .constants import PluginSettings
 from . import api
 
@@ -39,4 +41,4 @@ def validateSsoSecret(doc):
 
 
 def load(info):
-    info['apiRoot'].discourse_sso = api.DiscourseSso()
+    registerPluginWebroot(api.DiscourseSsoWebroot(), 'discourse_sso')
