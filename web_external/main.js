@@ -2,8 +2,8 @@ import $ from 'jquery';
 
 import View from 'girder/views/View';
 import { login } from 'girder/auth';
-import { restRequest } from 'girder/rest';
 import 'girder/utilities/jquery/girderEnable';
+import UserModel from 'girder/models/UserModel';
 
 import OAuthLoginView from 'girder_plugins/oauth/views/OAuthLoginView';
 
@@ -18,7 +18,7 @@ const StandaloneLoginView = View.extend({
             this.$('.g-validation-failed-message').text('');
 
             login(this.$('#g-login').val(), this.$('#g-password').val())
-                .done((resp) => {
+                .done(() => {
                     window.location.reload(true);
                 })
                 .fail((err) => {
@@ -37,12 +37,9 @@ const StandaloneLoginView = View.extend({
 
         'click .g-send-verification-email': function () {
             this.$('.g-validation-failed-message').html('');
-            restRequest({
-                url: 'user/verification',
-                method: 'POST',
-                data: {login: this.$('#g-login').val()},
-                error: null
-            })
+
+            const loginName = this.$('#g-login').val();
+            UserModel.sendVerificationEmail(loginName)
                 .done((resp) => {
                     this.$('.g-validation-failed-message').html(resp.message);
                 })
