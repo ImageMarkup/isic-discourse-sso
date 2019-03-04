@@ -16,12 +16,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ###############################################################################
-
+from girder.plugin import GirderPlugin, registerPluginWebroot, getPlugin
 import six
 
 from girder.models.model_base import ValidationException
 from girder.utility import setting_utilities
-from girder.utility.plugin_utilities import registerPluginWebroot
 
 from .constants import PluginSettings
 from . import api
@@ -40,5 +39,9 @@ def validateSsoSecret(doc):
             'Discourse SSO secret must be at least 10 characters.', 'value')
 
 
-def load(info):
-    registerPluginWebroot(api.DiscourseSsoWebroot(), 'discourse_sso')
+class DiscourseSSO(GirderPlugin):
+    DISPLAY_NAME = 'Discourse SSO'
+
+    def load(self, info):
+        getPlugin('oauth').load(info)
+        registerPluginWebroot(api.DiscourseSsoWebroot(), 'girder_discourse_sso')

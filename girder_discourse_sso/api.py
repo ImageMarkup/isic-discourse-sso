@@ -17,17 +17,16 @@
 #  limitations under the License.
 ###############################################################################
 
-import os
 import base64
 import cherrypy
 import hashlib
 import hmac
+import pkg_resources
 
 from six.moves import urllib
 
 from girder.api.rest import RestException, getCurrentUser
 from girder.utility.model_importer import ModelImporter
-from girder.utility.plugin_utilities import getPluginDir
 from girder.utility.webroot import WebrootBase
 
 from .constants import PluginSettings
@@ -36,7 +35,7 @@ from .constants import PluginSettings
 class DiscourseSsoWebroot(WebrootBase):
     def __init__(self, templatePath=None):
         if not templatePath:
-            templatePath = os.path.join(getPluginDir(), 'discourse_sso', 'server', 'webroot.mako')
+            templatePath = pkg_resources.resource_filename('girder_discourse_sso', 'webroot.mako')
         super(DiscourseSsoWebroot, self).__init__(templatePath)
 
         self.vars = {
@@ -88,6 +87,7 @@ class DiscourseSsoWebroot(WebrootBase):
 
         # Ensure HMAC-SHA256 digest matches provided signature
         if sig != hmac.new(key=secret, msg=sso, digestmod=hashlib.sha256).hexdigest():
+            import pdb; pdb.set_trace()
             raise RestException('Digest mismatch.')
 
         # Extract nonce and return URL
