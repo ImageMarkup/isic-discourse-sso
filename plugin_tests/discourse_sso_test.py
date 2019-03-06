@@ -26,7 +26,6 @@ from six.moves import urllib
 from girder.models.model_base import ValidationException
 from tests import base
 
-from server.constants import PluginSettings
 
 
 def setUpModule():

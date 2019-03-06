@@ -30,7 +30,6 @@ from girder.utility.model_importer import ModelImporter
 from girder.utility.plugin_utilities import getPluginDir
 from girder.utility.webroot import WebrootBase
 
-from .constants import PluginSettings
 
 
 class DiscourseSsoWebroot(WebrootBase):
