@@ -87,7 +87,6 @@ class DiscourseSsoWebroot(WebrootBase):
 
         # Ensure HMAC-SHA256 digest matches provided signature
         if sig != hmac.new(key=secret, msg=sso, digestmod=hashlib.sha256).hexdigest():
-            import pdb; pdb.set_trace()
             raise RestException('Digest mismatch.')
 
         # Extract nonce and return URL

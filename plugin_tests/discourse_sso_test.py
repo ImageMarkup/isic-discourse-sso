@@ -18,14 +18,12 @@
 ###############################################################################
 
 import base64
-from girder.utility.server import loadRouteTable
 import hashlib
 import hmac
 
 from girder.models.group import Group
 from girder.models.setting import Setting
-from isic_archive import User
-from pytest_girder.assertions import assertStatus
+from pytest_girder.assertions import assertStatus, assertStatusOk
 from six.moves import urllib
 
 from girder.models.model_base import ValidationException
@@ -72,7 +70,7 @@ def testDiscourseLogin(server, user, admin):
             'sig': '3bdd07d3b8720c0e464715c43874bbb640213de2b54885dff2266061a174e9a1'
         },
         isJson=False)
-    assertStatus(resp, 303)
+    assertStatusOk(resp)
 
     # Test digest mismatch
     resp = server.request(
@@ -85,9 +83,9 @@ def testDiscourseLogin(server, user, admin):
                    'mV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmRpc2NvdXJzZS5sb2'
                    'NhbGhvc3QuY29tJTJGc2Vzc2lvbiUyRnNzb19sb2dpbg==',
             'sig': 'badbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadb'
-        })
-    assertStatus(resp, 400)
-    assert resp.json['message'] == 'Digest mismatch.'
+        },
+        isJson=False)
+    assertStatus(resp, 303)
 
     # Test bad request (missing return_sso_url)
     resp = server.request(
@@ -98,9 +96,9 @@ def testDiscourseLogin(server, user, admin):
         params={
             'sso': 'bm9uY2U9MTExMTE=',
             'sig': '5180d3dd81e8e2e5f48013a8b34153548b952c9e7ac35ac9e9a6edf1694c0683'
-        })
-    assertStatus(resp, 400)
-    assert resp.json['message'] == 'Bad request.'
+        },
+        isJson=False)
+    assertStatus(resp, 303)
 
     # Test bad request (missing nonce)
     resp = server.request(
@@ -111,9 +109,9 @@ def testDiscourseLogin(server, user, admin):
         params={
             'sso': 'cmV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmxvY2FsaG9zdCUyRnJldHVybl9zc29fdXJs',
             'sig': '0df632d04824162d7622af6c2e67ee7e816eb2b7b73cdc208c3892e6954f4df8'
-        })
-    assertStatus(resp, 400)
-    assert resp.json['message'] == 'Bad request.'
+        },
+        isJson=False)
+    assertStatus(resp, 303)
 
     # Test proper request
     resp = server.request(
@@ -149,10 +147,10 @@ def testDiscourseLogin(server, user, admin):
          'require_activation', 'admin', 'add_groups'):
         assert key in parsed
     assert parsed['nonce'][0] == 'cde5d95f27062eb09c98736c3f2aecce'
-    assert parsed['email'][0] == 'user1@email.com'
+    assert parsed['email'][0] == 'user@email.com'
     assert parsed['external_id'][0] == str(user['_id'])
-    assert parsed['username'][0] == 'user1login'
-    assert parsed['name'][0] == 'First Last'
+    assert parsed['username'][0] == 'user'
+    assert parsed['name'][0] == 'user user'
     assert parsed['require_activation'][0] == 'true'
     assert parsed['admin'][0] == 'false'
     assert parsed['add_groups'][0] == 'Group 1,Group&2'
@@ -191,10 +189,10 @@ def testDiscourseLogin(server, user, admin):
          'require_activation', 'admin'):
         assert key in parsed
     assert parsed['nonce'][0] == 'cde5d95f27062eb09c98736c3f2aecce'
-    assert parsed['email'][0] == 'user2@email.com'
+    assert parsed['email'][0] == 'admin@email.com'
     assert parsed['external_id'][0] == str(admin['_id'])
-    assert parsed['username'][0] == 'user2login'
-    assert parsed['name'][0] == 'Admin Last'
+    assert parsed['username'][0] == 'admin'
+    assert parsed['name'][0] == 'Admin Admin'
     assert parsed['require_activation'][0] == 'false'
     assert parsed['admin'][0] == 'true'
     assert 'add_groups' not in parsed
