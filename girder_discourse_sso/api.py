@@ -18,14 +18,14 @@
 ###############################################################################
 
 import base64
-import cherrypy
 import hashlib
 import hmac
-import pkg_resources
 
+import cherrypy
+import pkg_resources
 from six.moves import urllib
 
-from girder.api.rest import RestException, getCurrentUser
+from girder.api.rest import getCurrentUser, RestException
 from girder.utility.model_importer import ModelImporter
 from girder.utility.webroot import WebrootBase
 

@@ -5,7 +5,7 @@ setup(
     version='0.1.0',
     description='Girder plugin for a Discourse Single-Sign-On provider.',
     url='https://github.com/ImageMarkup/girder_discourse_sso',
-    packages=find_packages(exclude=['plugin_tests']),
+    packages=find_packages(exclude=['test']),
     package_data={
         'girder_discourse_sso': ['webroot.mako']
     },

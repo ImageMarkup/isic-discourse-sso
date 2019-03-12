@@ -16,10 +16,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 ###############################################################################
-from girder.plugin import GirderPlugin, registerPluginWebroot, getPlugin
 import six
 
 from girder.models.model_base import ValidationException
+from girder.plugin import GirderPlugin, registerPluginWebroot, getPlugin
 from girder.utility import setting_utilities
 
 from .constants import PluginSettings
