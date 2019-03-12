@@ -21,16 +21,16 @@ import base64
 import hashlib
 import hmac
 
-from girder.models.group import Group
-from girder.models.setting import Setting
-from pytest_girder.assertions import assertStatus, assertStatusOk
+import pytest
 from six.moves import urllib
 
+from girder.models.group import Group
 from girder.models.model_base import ValidationException
+from girder.models.setting import Setting
+from pytest_girder.assertions import assertStatus, assertStatusOk
 
 from girder_discourse_sso import DiscourseSSO
 from girder_discourse_sso.constants import PluginSettings
-import pytest
 
 
 def assertSignature(secret, payload, expectedSignature):
@@ -41,21 +41,13 @@ def assertSignature(secret, payload, expectedSignature):
 
 @pytest.mark.plugin('girder_discourse_sso', DiscourseSSO)
 def testDiscourseLogin(server, user, admin):
-    group1 = Group().createGroup(
-        name='Group 1',
-        creator=user
-    )
+    group1 = Group().createGroup(name='Group 1', creator=user)
     Group().addUser(group1, user)
-    group2 = Group().createGroup(
-        name='Group&2',
-        creator=user
-    )
+    group2 = Group().createGroup(name='Group&2', creator=user)
     Group().addUser(group2, user)
 
     # Configure plugin settings
-    Setting().set(
-        PluginSettings.DISCOURSE_SSO_SECRET,
-        '0123456789')
+    Setting().set(PluginSettings.DISCOURSE_SSO_SECRET, '0123456789')
 
     # Test when not logged in
     resp = server.request(
@@ -65,11 +57,12 @@ def testDiscourseLogin(server, user, admin):
         user=None,
         params={
             'sso': 'bm9uY2U9Y2RlNWQ5NWYyNzA2MmViMDljOTg3MzZjM2YyYWVjY2Umc'
-                   'mV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmRpc2NvdXJzZS5sb2'
-                   'NhbGhvc3QuY29tJTJGc2Vzc2lvbiUyRnNzb19sb2dpbg==',
-            'sig': '3bdd07d3b8720c0e464715c43874bbb640213de2b54885dff2266061a174e9a1'
+            'mV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmRpc2NvdXJzZS5sb2'
+            'NhbGhvc3QuY29tJTJGc2Vzc2lvbiUyRnNzb19sb2dpbg==',
+            'sig': '3bdd07d3b8720c0e464715c43874bbb640213de2b54885dff2266061a174e9a1',
         },
-        isJson=False)
+        isJson=False,
+    )
     assertStatusOk(resp)
 
     # Test digest mismatch
@@ -80,11 +73,12 @@ def testDiscourseLogin(server, user, admin):
         user=user,
         params={
             'sso': 'bm9uY2U9Y2RlNWQ5NWYyNzA2MmViMDljOTg3MzZjM2YyYWVjY2Umc'
-                   'mV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmRpc2NvdXJzZS5sb2'
-                   'NhbGhvc3QuY29tJTJGc2Vzc2lvbiUyRnNzb19sb2dpbg==',
-            'sig': 'badbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadb'
+            'mV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmRpc2NvdXJzZS5sb2'
+            'NhbGhvc3QuY29tJTJGc2Vzc2lvbiUyRnNzb19sb2dpbg==',
+            'sig': 'badbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadb',
         },
-        isJson=False)
+        isJson=False,
+    )
     assertStatus(resp, 303)
 
     # Test bad request (missing return_sso_url)
@@ -95,9 +89,10 @@ def testDiscourseLogin(server, user, admin):
         user=user,
         params={
             'sso': 'bm9uY2U9MTExMTE=',
-            'sig': '5180d3dd81e8e2e5f48013a8b34153548b952c9e7ac35ac9e9a6edf1694c0683'
+            'sig': '5180d3dd81e8e2e5f48013a8b34153548b952c9e7ac35ac9e9a6edf1694c0683',
         },
-        isJson=False)
+        isJson=False,
+    )
     assertStatus(resp, 303)
 
     # Test bad request (missing nonce)
@@ -108,9 +103,10 @@ def testDiscourseLogin(server, user, admin):
         user=user,
         params={
             'sso': 'cmV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmxvY2FsaG9zdCUyRnJldHVybl9zc29fdXJs',
-            'sig': '0df632d04824162d7622af6c2e67ee7e816eb2b7b73cdc208c3892e6954f4df8'
+            'sig': '0df632d04824162d7622af6c2e67ee7e816eb2b7b73cdc208c3892e6954f4df8',
         },
-        isJson=False)
+        isJson=False,
+    )
     assertStatus(resp, 303)
 
     # Test proper request
@@ -121,11 +117,12 @@ def testDiscourseLogin(server, user, admin):
         user=user,
         params={
             'sso': 'bm9uY2U9Y2RlNWQ5NWYyNzA2MmViMDljOTg3MzZjM2YyYWVjY2Umc'
-                   'mV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmRpc2NvdXJzZS5sb2'
-                   'NhbGhvc3QuY29tJTJGc2Vzc2lvbiUyRnNzb19sb2dpbg==',
-            'sig': '3bdd07d3b8720c0e464715c43874bbb640213de2b54885dff2266061a174e9a1'
+            'mV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmRpc2NvdXJzZS5sb2'
+            'NhbGhvc3QuY29tJTJGc2Vzc2lvbiUyRnNzb19sb2dpbg==',
+            'sig': '3bdd07d3b8720c0e464715c43874bbb640213de2b54885dff2266061a174e9a1',
         },
-        isJson=False)
+        isJson=False,
+    )
     assertStatus(resp, 303)
     url = resp.headers['Location']
     parsedUrl = urllib.parse.urlparse(url)
@@ -135,16 +132,23 @@ def testDiscourseLogin(server, user, admin):
     sig = params['sig'][0]
 
     assertSignature(
-        secret='0123456789'.encode('utf-8'),
-        payload=sso.encode('utf-8'),
-        expectedSignature=sig)
+        secret='0123456789'.encode('utf-8'), payload=sso.encode('utf-8'), expectedSignature=sig
+    )
 
     sso = base64.b64decode(sso)
     sso = sso.decode('utf-8')
     parsed = urllib.parse.parse_qs(sso)
 
-    for key in ('nonce', 'email', 'external_id', 'username', 'name',
-         'require_activation', 'admin', 'add_groups'):
+    for key in (
+        'nonce',
+        'email',
+        'external_id',
+        'username',
+        'name',
+        'require_activation',
+        'admin',
+        'add_groups',
+    ):
         assert key in parsed
     assert parsed['nonce'][0] == 'cde5d95f27062eb09c98736c3f2aecce'
     assert parsed['email'][0] == 'user@email.com'
@@ -163,11 +167,12 @@ def testDiscourseLogin(server, user, admin):
         user=admin,
         params={
             'sso': 'bm9uY2U9Y2RlNWQ5NWYyNzA2MmViMDljOTg3MzZjM2YyYWVjY2Umc'
-                   'mV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmRpc2NvdXJzZS5sb2'
-                   'NhbGhvc3QuY29tJTJGc2Vzc2lvbiUyRnNzb19sb2dpbg==',
-            'sig': '3bdd07d3b8720c0e464715c43874bbb640213de2b54885dff2266061a174e9a1'
+            'mV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmRpc2NvdXJzZS5sb2'
+            'NhbGhvc3QuY29tJTJGc2Vzc2lvbiUyRnNzb19sb2dpbg==',
+            'sig': '3bdd07d3b8720c0e464715c43874bbb640213de2b54885dff2266061a174e9a1',
         },
-        isJson=False)
+        isJson=False,
+    )
     assertStatus(resp, 303)
     url = resp.headers['Location']
     parsedUrl = urllib.parse.urlparse(url)
@@ -177,16 +182,14 @@ def testDiscourseLogin(server, user, admin):
     sig = params['sig'][0]
 
     assertSignature(
-        secret='0123456789'.encode('utf-8'),
-        payload=sso.encode('utf-8'),
-        expectedSignature=sig)
+        secret='0123456789'.encode('utf-8'), payload=sso.encode('utf-8'), expectedSignature=sig
+    )
 
     sso = base64.b64decode(sso)
     sso = sso.decode('utf-8')
     parsed = urllib.parse.parse_qs(sso)
 
-    for key in ('nonce', 'email', 'external_id', 'username', 'name',
-         'require_activation', 'admin'):
+    for key in ('nonce', 'email', 'external_id', 'username', 'name', 'require_activation', 'admin'):
         assert key in parsed
     assert parsed['nonce'][0] == 'cde5d95f27062eb09c98736c3f2aecce'
     assert parsed['email'][0] == 'admin@email.com'
@@ -202,29 +205,18 @@ def testDiscourseLogin(server, user, admin):
 def testSsoSecretSettingValidation(server):
     """Test validation of SSO secret setting."""
     # Test valid SSO secret settings
-    Setting().set(
-        PluginSettings.DISCOURSE_SSO_SECRET,
-        '0000000000')
-    Setting().set(
-        PluginSettings.DISCOURSE_SSO_SECRET,
-        'j2zNLBXBsurcU0LfypwR')
-    Setting().set(
-        PluginSettings.DISCOURSE_SSO_SECRET,
-        '0000000000')
+    Setting().set(PluginSettings.DISCOURSE_SSO_SECRET, '0000000000')
+    Setting().set(PluginSettings.DISCOURSE_SSO_SECRET, 'j2zNLBXBsurcU0LfypwR')
+    Setting().set(PluginSettings.DISCOURSE_SSO_SECRET, '0000000000')
 
     # Test invalid SSO secret settings
-    with pytest.raises(
-        ValidationException):
+    with pytest.raises(ValidationException):
         Setting().set(PluginSettings.DISCOURSE_SSO_SECRET, None)
-    with pytest.raises(
-        ValidationException):
+    with pytest.raises(ValidationException):
         Setting().set(PluginSettings.DISCOURSE_SSO_SECRET, 1)
-    with pytest.raises(
-        ValidationException):
+    with pytest.raises(ValidationException):
         Setting().set(PluginSettings.DISCOURSE_SSO_SECRET, '')
-    with pytest.raises(
-        ValidationException):
+    with pytest.raises(ValidationException):
         Setting().set(PluginSettings.DISCOURSE_SSO_SECRET, '00000')
-    with pytest.raises(
-        ValidationException):
+    with pytest.raises(ValidationException):
         Setting().set(PluginSettings.DISCOURSE_SSO_SECRET, '000000000')

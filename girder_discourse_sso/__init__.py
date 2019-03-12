@@ -19,11 +19,11 @@
 import six
 
 from girder.models.model_base import ValidationException
-from girder.plugin import GirderPlugin, registerPluginWebroot, getPlugin
+from girder.plugin import getPlugin, GirderPlugin, registerPluginWebroot
 from girder.utility import setting_utilities
 
-from .constants import PluginSettings
 from . import api
+from .constants import PluginSettings
 
 
 @setting_utilities.validator(PluginSettings.DISCOURSE_SSO_SECRET)
@@ -32,11 +32,9 @@ def validateSsoSecret(doc):
     if not doc['value']:
         raise ValidationException('Discourse SSO secret is required.', 'value')
     if not isinstance(doc['value'], six.string_types):
-        raise ValidationException(
-            'Discourse SSO secret must be a string.', 'value')
+        raise ValidationException('Discourse SSO secret must be a string.', 'value')
     if len(doc['value']) < 10:
-        raise ValidationException(
-            'Discourse SSO secret must be at least 10 characters.', 'value')
+        raise ValidationException('Discourse SSO secret must be at least 10 characters.', 'value')
 
 
 class DiscourseSSO(GirderPlugin):

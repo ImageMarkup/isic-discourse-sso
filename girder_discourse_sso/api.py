@@ -38,11 +38,7 @@ class DiscourseSsoWebroot(WebrootBase):
             templatePath = pkg_resources.resource_filename('girder_discourse_sso', 'webroot.mako')
         super(DiscourseSsoWebroot, self).__init__(templatePath)
 
-        self.vars = {
-            'apiRoot': '/api/v1',
-            'staticRoot': '/static',
-            'title': 'ISIC Archive Login'
-        }
+        self.vars = {'apiRoot': '/api/v1', 'staticRoot': '/static', 'title': 'ISIC Archive Login'}
 
     def GET(self, **params):
         # Allow cookies for the rest of the request; normally, this would be done in "handleRoute"
@@ -69,9 +65,10 @@ class DiscourseSsoWebroot(WebrootBase):
 
     def redirect(self, user, sso, sig):
         """
-        Discourse Single-Sign-On provider implementation. Allows using Girder
-        authentication in place of Discourse authentication to avoid users having to
-        create an additional account.
+        Discourse Single-Sign-On provider implementation.
+
+        Allows using Girder authentication in place of Discourse authentication to avoid users
+        having to create an additional account.
         https://meta.discourse.org/t/official-single-sign-on-for-discourse/13045
 
         'sso', 'SSO payload from Discourse.'
@@ -110,11 +107,8 @@ class DiscourseSsoWebroot(WebrootBase):
             # letters and underscores), not "Full Name" (which is human readable), so it may be of
             # limited utility
             'add_groups': ','.join(
-                group['name']
-                for group in Group.find({
-                    '_id': {'$in': user.get('groups', [])}
-                })
-            )
+                group['name'] for group in Group.find({'_id': {'$in': user.get('groups', [])}})
+            ),
         }
         payload = urllib.parse.urlencode(payload)
         payload = payload.encode('utf-8')
@@ -122,9 +116,6 @@ class DiscourseSsoWebroot(WebrootBase):
 
         digest = hmac.new(key=secret, msg=payload, digestmod=hashlib.sha256).hexdigest()
 
-        args = urllib.parse.urlencode({
-            'sso': payload,
-            'sig': digest
-        })
+        args = urllib.parse.urlencode({'sso': payload, 'sig': digest})
 
         raise cherrypy.HTTPRedirect(url + '?' + args)
