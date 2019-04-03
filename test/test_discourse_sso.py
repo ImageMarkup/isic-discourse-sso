@@ -29,8 +29,8 @@ from girder.models.model_base import ValidationException
 from girder.models.setting import Setting
 from pytest_girder.assertions import assertStatus, assertStatusOk
 
-from girder_discourse_sso import DiscourseSSO
-from girder_discourse_sso.constants import PluginSettings
+from isic_discourse_sso import DiscourseSSO
+from isic_discourse_sso.constants import PluginSettings
 
 
 def assertSignature(secret, payload, expectedSignature):
@@ -39,7 +39,7 @@ def assertSignature(secret, payload, expectedSignature):
     assert expectedSignature == computedSignature
 
 
-@pytest.mark.plugin('girder_discourse_sso', DiscourseSSO)
+@pytest.mark.plugin('isic_discourse_sso', DiscourseSSO)
 def testDiscourseLogin(server, user, admin):
     group1 = Group().createGroup(name='Group 1', creator=user)
     Group().addUser(group1, user)
@@ -51,8 +51,8 @@ def testDiscourseLogin(server, user, admin):
 
     # Test when not logged in
     resp = server.request(
-        path='/girder_discourse_sso',
-        appPrefix='/girder_discourse_sso',
+        path='/isic_discourse_sso',
+        appPrefix='/isic_discourse_sso',
         prefix='',
         user=None,
         params={
@@ -67,8 +67,8 @@ def testDiscourseLogin(server, user, admin):
 
     # Test digest mismatch
     resp = server.request(
-        path='/girder_discourse_sso',
-        appPrefix='/girder_discourse_sso',
+        path='/isic_discourse_sso',
+        appPrefix='/isic_discourse_sso',
         prefix='',
         user=user,
         params={
@@ -83,8 +83,8 @@ def testDiscourseLogin(server, user, admin):
 
     # Test bad request (missing return_sso_url)
     resp = server.request(
-        path='/girder_discourse_sso',
-        appPrefix='/girder_discourse_sso',
+        path='/isic_discourse_sso',
+        appPrefix='/isic_discourse_sso',
         prefix='',
         user=user,
         params={
@@ -97,8 +97,8 @@ def testDiscourseLogin(server, user, admin):
 
     # Test bad request (missing nonce)
     resp = server.request(
-        path='/girder_discourse_sso',
-        appPrefix='/girder_discourse_sso',
+        path='/isic_discourse_sso',
+        appPrefix='/isic_discourse_sso',
         prefix='',
         user=user,
         params={
@@ -111,8 +111,8 @@ def testDiscourseLogin(server, user, admin):
 
     # Test proper request
     resp = server.request(
-        path='/girder_discourse_sso',
-        appPrefix='/girder_discourse_sso',
+        path='/isic_discourse_sso',
+        appPrefix='/isic_discourse_sso',
         prefix='',
         user=user,
         params={
@@ -161,8 +161,8 @@ def testDiscourseLogin(server, user, admin):
 
     # Test proper request for admin user
     resp = server.request(
-        path='/girder_discourse_sso',
-        appPrefix='/girder_discourse_sso',
+        path='/isic_discourse_sso',
+        appPrefix='/isic_discourse_sso',
         prefix='',
         user=admin,
         params={
@@ -201,7 +201,7 @@ def testDiscourseLogin(server, user, admin):
     assert 'add_groups' not in parsed
 
 
-@pytest.mark.plugin('girder_discourse_sso', DiscourseSSO)
+@pytest.mark.plugin('isic_discourse_sso', DiscourseSSO)
 def testSsoSecretSettingValidation(server):
     """Test validation of SSO secret setting."""
     # Test valid SSO secret settings

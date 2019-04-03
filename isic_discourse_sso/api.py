@@ -20,22 +20,22 @@
 import base64
 import hashlib
 import hmac
+import urllib.parse
 
 import cherrypy
 import pkg_resources
-from six.moves import urllib
 
 from girder.api.rest import getCurrentUser, RestException
 from girder.utility.model_importer import ModelImporter
 from girder.utility.webroot import WebrootBase
 
-from .constants import PluginSettings
+from isic_discourse_sso.constants import PluginSettings
 
 
 class DiscourseSsoWebroot(WebrootBase):
     def __init__(self, templatePath=None):
         if not templatePath:
-            templatePath = pkg_resources.resource_filename('girder_discourse_sso', 'webroot.mako')
+            templatePath = pkg_resources.resource_filename('isic_discourse_sso', 'webroot.mako')
         super(DiscourseSsoWebroot, self).__init__(templatePath)
 
         self.vars = {'apiRoot': '/api/v1', 'staticRoot': '/static', 'title': 'ISIC Archive Login'}
