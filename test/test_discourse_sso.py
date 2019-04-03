@@ -1,28 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-###############################################################################
-#  Copyright Kitware Inc.
-#
-#  Licensed under the Apache License, Version 2.0 ( the "License" );
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-###############################################################################
-
 import base64
 import hashlib
 import hmac
+import urllib.parse
 
 import pytest
-from six.moves import urllib
 
 from girder.models.group import Group
 from girder.models.model_base import ValidationException
@@ -30,17 +12,17 @@ from girder.models.setting import Setting
 from pytest_girder.assertions import assertStatus, assertStatusOk
 
 from isic_discourse_sso import DiscourseSSO
-from isic_discourse_sso.constants import PluginSettings
+from isic_discourse_sso.settings import PluginSettings
 
 
-def assertSignature(secret, payload, expectedSignature):
+def assert_signature(secret, payload, expected_signature):
     """Assert that HMAC-SHA256 digest matches expected signature."""
-    computedSignature = hmac.new(key=secret, msg=payload, digestmod=hashlib.sha256).hexdigest()
-    assert expectedSignature == computedSignature
+    computed_signature = hmac.new(key=secret, msg=payload, digestmod=hashlib.sha256).hexdigest()
+    assert expected_signature == computed_signature
 
 
 @pytest.mark.plugin('isic_discourse_sso', DiscourseSSO)
-def testDiscourseLogin(server, user, admin):
+def test_discourse_login(server, user, admin):
     group1 = Group().createGroup(name='Group 1', creator=user)
     Group().addUser(group1, user)
     group2 = Group().createGroup(name='Group&2', creator=user)
@@ -51,9 +33,7 @@ def testDiscourseLogin(server, user, admin):
 
     # Test when not logged in
     resp = server.request(
-        path='/isic_discourse_sso',
-        appPrefix='/isic_discourse_sso',
-        prefix='',
+        path='/discourse_sso',
         user=None,
         params={
             'sso': 'bm9uY2U9Y2RlNWQ5NWYyNzA2MmViMDljOTg3MzZjM2YyYWVjY2Umc'
@@ -61,15 +41,12 @@ def testDiscourseLogin(server, user, admin):
             'NhbGhvc3QuY29tJTJGc2Vzc2lvbiUyRnNzb19sb2dpbg==',
             'sig': '3bdd07d3b8720c0e464715c43874bbb640213de2b54885dff2266061a174e9a1',
         },
-        isJson=False,
     )
-    assertStatusOk(resp)
+    assertStatus(resp, 401)
 
     # Test digest mismatch
     resp = server.request(
-        path='/isic_discourse_sso',
-        appPrefix='/isic_discourse_sso',
-        prefix='',
+        path='/discourse_sso',
         user=user,
         params={
             'sso': 'bm9uY2U9Y2RlNWQ5NWYyNzA2MmViMDljOTg3MzZjM2YyYWVjY2Umc'
@@ -77,43 +54,34 @@ def testDiscourseLogin(server, user, admin):
             'NhbGhvc3QuY29tJTJGc2Vzc2lvbiUyRnNzb19sb2dpbg==',
             'sig': 'badbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadb',
         },
-        isJson=False,
     )
-    assertStatus(resp, 303)
+    assertStatus(resp, 400)
 
     # Test bad request (missing return_sso_url)
     resp = server.request(
-        path='/isic_discourse_sso',
-        appPrefix='/isic_discourse_sso',
-        prefix='',
+        path='/discourse_sso',
         user=user,
         params={
             'sso': 'bm9uY2U9MTExMTE=',
             'sig': '5180d3dd81e8e2e5f48013a8b34153548b952c9e7ac35ac9e9a6edf1694c0683',
         },
-        isJson=False,
     )
-    assertStatus(resp, 303)
+    assertStatus(resp, 400)
 
     # Test bad request (missing nonce)
     resp = server.request(
-        path='/isic_discourse_sso',
-        appPrefix='/isic_discourse_sso',
-        prefix='',
+        path='/discourse_sso',
         user=user,
         params={
             'sso': 'cmV0dXJuX3Nzb191cmw9aHR0cCUzQSUyRiUyRmxvY2FsaG9zdCUyRnJldHVybl9zc29fdXJs',
             'sig': '0df632d04824162d7622af6c2e67ee7e816eb2b7b73cdc208c3892e6954f4df8',
         },
-        isJson=False,
     )
-    assertStatus(resp, 303)
+    assertStatus(resp, 400)
 
     # Test proper request
     resp = server.request(
-        path='/isic_discourse_sso',
-        appPrefix='/isic_discourse_sso',
-        prefix='',
+        path='/discourse_sso',
         user=user,
         params={
             'sso': 'bm9uY2U9Y2RlNWQ5NWYyNzA2MmViMDljOTg3MzZjM2YyYWVjY2Umc'
@@ -121,18 +89,18 @@ def testDiscourseLogin(server, user, admin):
             'NhbGhvc3QuY29tJTJGc2Vzc2lvbiUyRnNzb19sb2dpbg==',
             'sig': '3bdd07d3b8720c0e464715c43874bbb640213de2b54885dff2266061a174e9a1',
         },
-        isJson=False,
     )
-    assertStatus(resp, 303)
-    url = resp.headers['Location']
-    parsedUrl = urllib.parse.urlparse(url)
-    params = urllib.parse.parse_qs(parsedUrl.query)
+    assertStatusOk(resp)
+    assert 'returnUrl' in resp.json
+    return_url = resp.json['returnUrl']
+    parsed_url = urllib.parse.urlparse(return_url)
+    params = urllib.parse.parse_qs(parsed_url.query)
     assert 'sso' in params and 'sig' in params
     sso = params['sso'][0]
     sig = params['sig'][0]
 
-    assertSignature(
-        secret='0123456789'.encode('utf-8'), payload=sso.encode('utf-8'), expectedSignature=sig
+    assert_signature(
+        secret='0123456789'.encode('utf-8'), payload=sso.encode('utf-8'), expected_signature=sig
     )
 
     sso = base64.b64decode(sso)
@@ -161,9 +129,7 @@ def testDiscourseLogin(server, user, admin):
 
     # Test proper request for admin user
     resp = server.request(
-        path='/isic_discourse_sso',
-        appPrefix='/isic_discourse_sso',
-        prefix='',
+        path='/discourse_sso',
         user=admin,
         params={
             'sso': 'bm9uY2U9Y2RlNWQ5NWYyNzA2MmViMDljOTg3MzZjM2YyYWVjY2Umc'
@@ -171,18 +137,18 @@ def testDiscourseLogin(server, user, admin):
             'NhbGhvc3QuY29tJTJGc2Vzc2lvbiUyRnNzb19sb2dpbg==',
             'sig': '3bdd07d3b8720c0e464715c43874bbb640213de2b54885dff2266061a174e9a1',
         },
-        isJson=False,
     )
-    assertStatus(resp, 303)
-    url = resp.headers['Location']
-    parsedUrl = urllib.parse.urlparse(url)
-    params = urllib.parse.parse_qs(parsedUrl.query)
+    assertStatusOk(resp)
+    assert 'returnUrl' in resp.json
+    return_url = resp.json['returnUrl']
+    parsed_url = urllib.parse.urlparse(return_url)
+    params = urllib.parse.parse_qs(parsed_url.query)
     assert 'sso' in params and 'sig' in params
     sso = params['sso'][0]
     sig = params['sig'][0]
 
-    assertSignature(
-        secret='0123456789'.encode('utf-8'), payload=sso.encode('utf-8'), expectedSignature=sig
+    assert_signature(
+        secret='0123456789'.encode('utf-8'), payload=sso.encode('utf-8'), expected_signature=sig
     )
 
     sso = base64.b64decode(sso)
@@ -202,7 +168,7 @@ def testDiscourseLogin(server, user, admin):
 
 
 @pytest.mark.plugin('isic_discourse_sso', DiscourseSSO)
-def testSsoSecretSettingValidation(server):
+def test_sso_secret_setting_validation(server):
     """Test validation of SSO secret setting."""
     # Test valid SSO secret settings
     Setting().set(PluginSettings.DISCOURSE_SSO_SECRET, '0000000000')

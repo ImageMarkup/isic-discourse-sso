@@ -5,7 +5,7 @@ import Girder, { RestClient } from '@girder/components/src';
 Vue.use(Girder);
 
 const girderRest = new RestClient({
-  apiRoot: 'https://isic-archive.com/api/v1',
+  apiRoot: process.env.VUE_APP_ISIC_API_ROOT,
   // The "cors" setting is critical to setting the cookie and notifying the server of login
   cors: true,
 });
