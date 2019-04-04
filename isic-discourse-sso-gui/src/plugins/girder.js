@@ -6,8 +6,8 @@ Vue.use(Girder);
 
 const girderRest = new RestClient({
   apiRoot: process.env.VUE_APP_ISIC_API_ROOT,
-  // The "cors" setting is critical to setting the cookie and notifying the server of login
-  cors: true,
+  // Do not overwrite the cookie in Javascript; it will be set with a Domain attribute by HTTP
+  cors: false,
 });
 
 const GirderProvider = {
