@@ -10,6 +10,8 @@
   "dependencies": {
     "@babel/polyfill": "^7.4.3",
     "@girder/components": "^3.0.0-alpha.2",
+    "@sentry/browser": "^5.0.5",
+    "@sentry/integrations": "^5.0.5",
     "url-polyfill": "^1.1.5",
     "vue": "^2.6.10",
     "vuetify": "^1.5.9"
