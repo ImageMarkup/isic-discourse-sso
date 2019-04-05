@@ -93,13 +93,19 @@ export default {
           params: currentQs,
         });
       } catch (error) {
-        if (error.response.status === 401) {
+        if (error.response && error.response.status === 401) {
           // Normal failure
           this.mustLogin = true;
         } else {
-          // Abnormal failure
-          const responseData = error.response.data;
-          this.errorText = responseData.message || JSON.stringify(responseData);
+          if (error.response) {
+            // Abnormal application failure
+            const responseData = error.response.data;
+            this.errorText = responseData.message || JSON.stringify(responseData);
+          } else {
+            // Abnormal network failure
+            this.errorText = error.message;
+          }
+          throw error;
         }
         return;
       }
