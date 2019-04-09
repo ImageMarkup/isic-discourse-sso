@@ -55,7 +55,7 @@
 </template>
 
 <script>
-import Authentication from '@girder/components/src/components/Authentication';
+import Authentication from '@girder/components/src/components';
 
 export default {
   name: 'App',
