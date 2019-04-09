@@ -6,7 +6,7 @@ setup(
     description='Girder plugin for a Discourse Single-Sign-On provider.',
     url='https://github.com/ImageMarkup/isic-discourse-sso',
     license='Apache 2.0',
-    packages=find_packages(exclude=['test']),
+    packages=find_packages(exclude=['tests']),
     python_requires='>=3.6',
     install_requires=['girder>=3.0.0a2'],
     entry_points={'girder.plugin': ['isic_discourse_sso = isic_discourse_sso:DiscourseSSO']},
