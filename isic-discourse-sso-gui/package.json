@@ -9,12 +9,12 @@
   },
   "dependencies": {
     "@babel/polyfill": "^7.4.3",
-    "@girder/components": "^3.0.0-alpha.2",
-    "@sentry/browser": "^5.0.5",
-    "@sentry/integrations": "^5.0.5",
+    "@girder/components": "^3.0.0-alpha.3",
+    "@sentry/browser": "^5.0.6",
+    "@sentry/integrations": "^5.0.6",
     "url-polyfill": "^1.1.5",
     "vue": "^2.6.10",
-    "vuetify": "^1.5.9"
+    "vuetify": "^1.5.10"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.5.5",
