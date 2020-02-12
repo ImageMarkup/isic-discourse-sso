@@ -10,7 +10,7 @@ const girderRest = new RestClient({
   cors: false,
 });
 
-girderRest.interceptors.request.use(config => ({
+girderRest.interceptors.request.use((config) => ({
   ...config,
   // Send and receive cookies
   withCredentials: true,

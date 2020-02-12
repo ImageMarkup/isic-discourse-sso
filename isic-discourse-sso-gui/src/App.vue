@@ -2,10 +2,10 @@
   <v-app>
     <v-content>
       <v-container>
-        <v-layout>
-          <v-flex
-            xs6
-            offset-xs3
+        <v-row>
+          <v-col
+            cols="6"
+            offset="3"
           >
             <div class="display-2">
               ISIC Forum Login
@@ -47,8 +47,8 @@
               </div>
               <v-progress-circular indeterminate />
             </template>
-          </v-flex>
-        </v-layout>
+          </v-col>
+        </v-row>
       </v-container>
     </v-content>
   </v-app>
